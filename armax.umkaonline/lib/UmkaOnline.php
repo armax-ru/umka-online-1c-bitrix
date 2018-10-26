@@ -75,7 +75,6 @@ class UmkaOnline extends Cashbox implements IPrintImmediately, ICheckable
     {
 
         $data = $check->getDataForCheck();
-        $this->sendToErrorLog('Чек', $data);
 
         /** @var Main\Type\DateTime $dateTime */
         $dateTime = $data['date_create'];
