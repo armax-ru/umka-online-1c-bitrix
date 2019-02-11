@@ -23,6 +23,12 @@ use Bitrix\Sale\Cashbox\SellReturnCheck;
 use Bitrix\Sale\Cashbox\AdvancePaymentCheck;
 use Bitrix\Sale\Cashbox\AdvanceReturnCashCheck;
 use Bitrix\Sale\Cashbox\AdvanceReturnCheck;
+use Bitrix\Sale\Cashbox\PrepaymentCheck;
+use Bitrix\Sale\Cashbox\PrepaymentReturnCheck;
+use Bitrix\Sale\Cashbox\PrepaymentReturnCashCheck;
+use Bitrix\Sale\Cashbox\FullPrepaymentCheck;
+use Bitrix\Sale\Cashbox\FullPrepaymentReturnCheck;
+use Bitrix\Sale\Cashbox\FullPrepaymentReturnCashCheck;
 use Bitrix\Sale\Cashbox\CreditCheck;
 use Bitrix\Sale\Cashbox\CreditReturnCheck;
 use Bitrix\Sale\Cashbox\CreditPaymentCheck;
@@ -78,7 +84,6 @@ class UmkaOnline extends Cashbox implements IPrintImmediately, ICheckable
 
         /** @var Main\Type\DateTime $dateTime */
         $dateTime = $data['date_create'];
-        $phone = $this->normalizePhone($data['client_phone']);
 
         $serviceEmail = $this->getValueFromSettings('SERVICE', 'EMAIL');
         if (!$serviceEmail)
@@ -93,10 +98,7 @@ class UmkaOnline extends Cashbox implements IPrintImmediately, ICheckable
                 'callback_url' => $this->getCallbackUrl(),
             ),
             'receipt' => array(
-                'client' => array(
-                    'email' => $data['client_email'] ?: '',
-                    'phone' => $phone,
-                ),
+                'client' => array(),
                 'company' => array(
                     'email' => $serviceEmail,
                     'sno' => $this->getValueFromSettings('TAX', 'SNO'),
@@ -109,6 +111,36 @@ class UmkaOnline extends Cashbox implements IPrintImmediately, ICheckable
             )
         );
 
+        $email = $data['client_email'] ?: '';
+
+        $phone = \NormalizePhone($data['client_phone']);
+        if (is_string($phone))
+        {
+            if ($phone[0] === '7')
+                $phone = substr($phone, 1);
+        }
+        else
+        {
+            $phone = '';
+        }
+
+        $clientInfo = $this->getValueFromSettings('CLIENT', 'INFO');
+        if ($clientInfo === 'PHONE')
+        {
+            $result['receipt']['client'] = ['phone' => $phone];
+        }
+        elseif ($clientInfo === 'EMAIL')
+        {
+            $result['receipt']['client'] = ['email' => $email];
+        }
+        else
+        {
+            $result['receipt']['client'] = [
+                'email' => $email,
+                'phone' => $phone,
+            ];
+        }
+
         $paymentTypeMap = $this->getPaymentTypeMap();
         foreach ($data['payments'] as $payment)
         {
@@ -119,9 +151,9 @@ class UmkaOnline extends Cashbox implements IPrintImmediately, ICheckable
         }
 
         $checkTypeMap = $this->getCheckTypeMap();
+        $paymentObjectMap = $this->getPaymentObjectMap();
         foreach ($data['items'] as $i => $item)
         {
-
             $vat = $this->getValueFromSettings('VAT', $item['vat']);
             if ($vat === null)
                 $vat = $this->getValueFromSettings('VAT', 'NOT_VAT');
@@ -132,15 +164,30 @@ class UmkaOnline extends Cashbox implements IPrintImmediately, ICheckable
                 'sum' => (float)$item['sum'],
                 'quantity' => $item['quantity'],
                 'payment_method' => $checkTypeMap[$check::getType()],
-                'payment_object' => 'commodity',
+                'payment_object' => $paymentObjectMap[$item['payment_object']],
                 'vat' => array(
                     'type' => $vat
                 ),
             );
         }
+
         return $result;
     }
 
+
+    /**
+     * @return array
+     */
+    private function getPaymentObjectMap()
+    {
+        return [
+            Check::PAYMENT_OBJECT_COMMODITY => 'commodity',
+            Check::PAYMENT_OBJECT_SERVICE => 'service',
+            Check::PAYMENT_OBJECT_JOB => 'job',
+            Check::PAYMENT_OBJECT_EXCISE => 'excise',
+            Check::PAYMENT_OBJECT_PAYMENT => 'payment',
+        ];
+    }
 
     /**
      * @return array
@@ -177,6 +224,12 @@ class UmkaOnline extends Cashbox implements IPrintImmediately, ICheckable
             AdvancePaymentCheck::getType() => 'advance',
             AdvanceReturnCashCheck::getType() => 'advance',
             AdvanceReturnCheck::getType() => 'advance',
+            PrepaymentCheck::getType() => 'prepayment',
+            PrepaymentReturnCheck::getType() => 'prepayment',
+            PrepaymentReturnCashCheck::getType() => 'prepayment',
+            FullPrepaymentCheck::getType() => 'full_prepayment',
+            FullPrepaymentReturnCheck::getType() => 'full_prepayment',
+            FullPrepaymentReturnCashCheck::getType() => 'full_prepayment',
             CreditCheck::getType() => 'credit',
             CreditReturnCheck::getType() => 'credit',
             CreditPaymentCheck::getType() => 'credit_payment',
