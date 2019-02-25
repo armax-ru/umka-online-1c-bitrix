@@ -3,6 +3,7 @@ IncludeModuleLangFile(__FILE__);
 
 use Bitrix\Main\Application;
 use Bitrix\Main\EventManager;
+use Bitrix\Main\Loader;
 use Bitrix\Sale\Cashbox\Internals\CashboxTable;
 use Bitrix\Sale\Cashbox\Manager;
 
@@ -59,31 +60,33 @@ Class armax_umkaonline extends CModule
 
     public function UnInstallDB()
     {
-    	// Битрикс показывает ошибку вместо списка касс,
-		// если касса активна и система не может найти ее обработчик.
-		// Найдем все наши кассы и деактивируем их не удаляя данные.
+        if (Loader::includeModule('sale')) {
+        	// Битрикс показывает ошибку вместо списка касс,
+    		// если касса активна и система не может найти ее обработчик.
+    		// Найдем все наши кассы и деактивируем их не удаляя данные.
 
-		// Данные для записи в колонку 'ACTIVE' - отключение кассы
-		$cashbox_db_off = array('ACTIVE' => 'N');
+    		// Данные для записи в колонку 'ACTIVE' - отключение кассы
+    		$cashbox_db_off = array('ACTIVE' => 'N');
 
-    	// Запрос на получение списка касс с обработчиком этого модуля
-        $dbRes = CashboxTable::getList(
-            array(
-                'select' => array('ID'),
-                'filter' => array('HANDLER' => self::CASHBOX_HANDLER_DB),
-            )
-        );
+        	// Запрос на получение списка касс с обработчиком этого модуля
+            
+            $dbRes = CashboxTable::getList(
+                array(
+                    'select' => array('ID'),
+                    'filter' => array('HANDLER' => self::CASHBOX_HANDLER_DB),
+                )
+            );
 
-        // Получаем кассы
-        while ($cashbox = $dbRes->fetch())
-        {
-        	// Отключаем каждую кассу
-            // FIXME
-			Manager::update($cashbox['ID'], $cashbox_db_off);
+            // Получаем кассы
+            while ($cashbox = $dbRes->fetch())
+            {
+            	// Отключаем каждую кассу
+    			Manager::update($cashbox['ID'], $cashbox_db_off);
+            }
+
+            return true;
         }
-
-        return true;
-
+        return false;
     }
 
 
