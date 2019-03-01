@@ -24,6 +24,9 @@
 На данный момент, модуль проходит модерацию в каталог 1C-Bitrix Marketplace 
 и будет доступен к автоматической установке позднее.
 
+В данный момент, модуль можно установить из Marketplace c помощью ссылки:  
+`http://ваш-сайт/bitrix/admin/update_system_partner.php?addmodule=armax.umkaonline`
+
 ### Ручная установка
 
 1. Скачать [архив](https://github.com/armax-ru/umka-online-1c-bitrix/archive/master.zip) с папкой модуля.

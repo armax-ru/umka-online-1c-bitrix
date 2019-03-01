@@ -15,6 +15,7 @@ use Bitrix\Sale\Cashbox\Cashbox;
 use Bitrix\Sale\Cashbox\Check;
 use Bitrix\Sale\Cashbox\CheckManager;
 use Bitrix\Sale\Cashbox\Internals\CashboxTable;
+use Bitrix\Sale\Cashbox\Internals\CashboxCheckTable;
 use Bitrix\Sale\Cashbox\IPrintImmediately;
 use Bitrix\Sale\Cashbox\ICheckable;
 use Bitrix\Sale\Cashbox\SellCheck;
@@ -569,6 +570,14 @@ class UmkaOnline extends Cashbox implements IPrintImmediately, ICheckable
     public function check(Check $check)
     {
         $EXTERNAL_UUID = $check->getField('EXTERNAL_UUID');
+        $checkId = $check->getField('ID');
+
+        if (empty($EXTERNAL_UUID)) {
+            CashboxCheckTable::update($checkId, array('STATUS' => 'E'));
+            $r = new Result();
+            $r->addError(new Main\Error(Localization\Loc::getMessage('SALE_CASHBOX_UMKAONLINE_CHECK_STATUS_WRONG_UUID')));
+            return new $r;
+        }
 
         $url = $this->getUrl(
             static::OPERATION_CHECK_CHECK,
