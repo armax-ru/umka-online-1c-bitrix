@@ -9,99 +9,97 @@ use Bitrix\Sale\Cashbox\Manager;
 
 Class armax_umkaonline extends CModule
 {
-	const MODULE_ID = 'armax.umkaonline';
-	const CASHBOX_HANDLER_DB = 'Armax\\\UmkaOnline';
-	var $MODULE_ID = 'armax.umkaonline';
-	var $MODULE_VERSION;
-	var $MODULE_VERSION_DATE;
-	var $MODULE_NAME;
-	var $MODULE_DESCRIPTION;
-	var $MODULE_CSS;
-	var $strError = '';
+  const MODULE_ID = 'armax.umkaonline';
+  const CASHBOX_HANDLER_DB = 'Armax\\\UmkaOnline';
+  var $MODULE_ID = 'armax.umkaonline';
+  var $MODULE_VERSION;
+  var $MODULE_VERSION_DATE;
+  var $MODULE_NAME;
+  var $MODULE_DESCRIPTION;
+  var $MODULE_CSS;
+  var $strError = '';
 
-	function __construct()
-	{
-		$arModuleVersion = array();
-		include(dirname(__FILE__)."/version.php");
-		$this->MODULE_VERSION = $arModuleVersion["VERSION"];
-		$this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
-		$this->MODULE_NAME = GetMessage("armax.umkaonline_MODULE_NAME");
-		$this->MODULE_DESCRIPTION = GetMessage("armax.umkaonline_MODULE_DESC");
+  function __construct()
+  {
+    $arModuleVersion = array();
+    include(dirname(__FILE__)."/version.php");
+    $this->MODULE_VERSION = $arModuleVersion["VERSION"];
+    $this->MODULE_VERSION_DATE = $arModuleVersion["VERSION_DATE"];
+    $this->MODULE_NAME = GetMessage("armax.umkaonline_MODULE_NAME");
+    $this->MODULE_DESCRIPTION = GetMessage("armax.umkaonline_MODULE_DESC");
 
-		$this->PARTNER_NAME = GetMessage("armax.umkaonline_PARTNER_NAME");
-		$this->PARTNER_URI = GetMessage("armax.umkaonline_PARTNER_URI");
-	}
+    $this->PARTNER_NAME = GetMessage("armax.umkaonline_PARTNER_NAME");
+    $this->PARTNER_URI = GetMessage("armax.umkaonline_PARTNER_URI");
+  }
 
-    public function InstallEvents()
-	{
+  public function InstallEvents()
+  {
         EventManager::getInstance()->registerEventHandler("sale", "OnGetCustomCashboxHandlers", self::MODULE_ID, "CUmkaOnline", "registerMainClass");
-		return true;
-	}
+    return true;
+  }
 
-	public function UnInstallEvents()
-	{
+  public function UnInstallEvents()
+  {
         EventManager::getInstance()->unRegisterEventHandler("sale", "OnGetCustomCashboxHandlers", self::MODULE_ID, "CUmkaOnline", "registerMainClass");
-		return true;
-	}
+    return true;
+  }
 
-	private function getLogDirPath() {
-	    return Application::getDocumentRoot() . '/umkaonline';
+  private function getLogDirPath() {
+    return Application::getDocumentRoot() . '/umkaonline';
+  }
+
+  public function InstallFiles()
+  {
+    CopyDirFiles(__DIR__."/files/logs",$this->getLogDirPath());
+
+    return true;
+  }
+
+  public function UnInstallDB()
+  {
+    if (Loader::includeModule('sale')) {
+      // Ð‘Ð¸Ñ‚Ñ€Ð¸ÐºÑ Ð¿Ð¾ÐºÐ°Ð·Ñ‹Ð²Ð°ÐµÑ‚ Ð¾ÑˆÐ¸Ð±ÐºÑƒ Ð²Ð¼ÐµÑÑ‚Ð¾ ÑÐ¿Ð¸ÑÐºÐ° ÐºÐ°ÑÑ,
+      // ÐµÑÐ»Ð¸ ÐºÐ°ÑÑÐ° Ð°ÐºÑ‚Ð¸Ð²Ð½Ð° Ð¸ ÑÐ¸ÑÑ‚ÐµÐ¼Ð° Ð½Ðµ Ð¼Ð¾Ð¶ÐµÑ‚ Ð½Ð°Ð¹Ñ‚Ð¸ ÐµÐµ Ð¾Ð±Ñ€Ð°Ð±Ð¾Ñ‚Ñ‡Ð¸Ðº.
+      // ÐÐ°Ð¹Ð´ÐµÐ¼ Ð²ÑÐµ Ð½Ð°ÑˆÐ¸ ÐºÐ°ÑÑÑ‹ Ð¸ Ð´ÐµÐ°ÐºÑ‚Ð¸Ð²Ð¸Ñ€ÑƒÐµÐ¼ Ð¸Ñ… Ð½Ðµ ÑƒÐ´Ð°Ð»ÑÑ Ð´Ð°Ð½Ð½Ñ‹Ðµ.
+
+      // Ð”Ð°Ð½Ð½Ñ‹Ðµ Ð´Ð»Ñ Ð·Ð°Ð¿Ð¸ÑÐ¸ Ð² ÐºÐ¾Ð»Ð¾Ð½ÐºÑƒ 'ACTIVE' - Ð¾Ñ‚ÐºÐ»ÑŽÑ‡ÐµÐ½Ð¸Ðµ ÐºÐ°ÑÑÑ‹
+      $cashbox_db_off = array('ACTIVE' => 'N');
+
+      // Ð—Ð°Ð¿Ñ€Ð¾Ñ Ð½Ð° Ð¿Ð¾Ð»ÑƒÑ‡ÐµÐ½Ð¸Ðµ ÑÐ¿Ð¸ÑÐºÐ° ÐºÐ°ÑÑ Ñ Ð¾Ð±Ñ€Ð°Ð±Ð¾Ñ‚Ñ‡Ð¸ÐºÐ¾Ð¼ ÑÑ‚Ð¾Ð³Ð¾ Ð¼Ð¾Ð´ÑƒÐ»Ñ
+          
+      $dbRes = CashboxTable::getList(
+          array(
+              'select' => array('ID'),
+              'filter' => array('HANDLER' => self::CASHBOX_HANDLER_DB),
+          )
+      );
+
+      // ÐŸÐ¾Ð»ÑƒÑ‡Ð°ÐµÐ¼ ÐºÐ°ÑÑÑ‹
+      while ($cashbox = $dbRes->fetch())
+      {
+        // ÐžÑ‚ÐºÐ»ÑŽÑ‡Ð°ÐµÐ¼ ÐºÐ°Ð¶Ð´ÑƒÑŽ ÐºÐ°ÑÑÑƒ
+        Manager::update($cashbox['ID'], $cashbox_db_off);
+      }
+
+      return true;
     }
 
-	public function InstallFiles()
-    {
-        CopyDirFiles(
-            __DIR__."/files/logs",
-            $this->getLogDirPath()
-        );
-
-        return true;
-    }
-
-    public function UnInstallDB()
-    {
-        if (Loader::includeModule('sale')) {
-        	// Áèòðèêñ ïîêàçûâàåò îøèáêó âìåñòî ñïèñêà êàññ,
-    		// åñëè êàññà àêòèâíà è ñèñòåìà íå ìîæåò íàéòè åå îáðàáîò÷èê.
-    		// Íàéäåì âñå íàøè êàññû è äåàêòèâèðóåì èõ íå óäàëÿÿ äàííûå.
-
-    		// Äàííûå äëÿ çàïèñè â êîëîíêó 'ACTIVE' - îòêëþ÷åíèå êàññû
-    		$cashbox_db_off = array('ACTIVE' => 'N');
-
-        	// Çàïðîñ íà ïîëó÷åíèå ñïèñêà êàññ ñ îáðàáîò÷èêîì ýòîãî ìîäóëÿ
-            
-            $dbRes = CashboxTable::getList(
-                array(
-                    'select' => array('ID'),
-                    'filter' => array('HANDLER' => self::CASHBOX_HANDLER_DB),
-                )
-            );
-
-            // Ïîëó÷àåì êàññû
-            while ($cashbox = $dbRes->fetch())
-            {
-            	// Îòêëþ÷àåì êàæäóþ êàññó
-    			Manager::update($cashbox['ID'], $cashbox_db_off);
-            }
-
-            return true;
-        }
-        return false;
-    }
+    return false;
+  }
 
 
-    public function DoInstall()
-	{
-	    $this->InstallFiles();
-		$this->InstallEvents();
-		RegisterModule(self::MODULE_ID);
-	}
+  public function DoInstall()
+  {
+    $this->InstallFiles();
+    $this->InstallEvents();
+    RegisterModule(self::MODULE_ID);
+  }
 
-    public function DoUninstall()
-	{
-		$this->UnInstallDB();
-		$this->UnInstallEvents();
-		UnRegisterModule(self::MODULE_ID);
-	}
+  public function DoUninstall()
+  {
+    $this->UnInstallDB();
+    $this->UnInstallEvents();
+    UnRegisterModule(self::MODULE_ID);
+  }
 }
 

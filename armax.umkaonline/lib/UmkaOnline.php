@@ -489,7 +489,7 @@ class UmkaOnline extends Cashbox implements IPrintImmediately, ICheckable
         }
 
         $checkQuery = static::buildCheckQuery($check);
-        $validateResult = $this->validate($checkQuery);
+        $validateResult = $this->validateCheckQuery($checkQuery);
         if (!$validateResult->isSuccess())
         {
             return $validateResult;
@@ -628,7 +628,7 @@ class UmkaOnline extends Cashbox implements IPrintImmediately, ICheckable
      * @param array $checkData
      * @return Result
      */
-    protected function validate(array $checkData)
+    protected function validateCheckQuery(array $checkData)
     {
         $result = new Result();
 
