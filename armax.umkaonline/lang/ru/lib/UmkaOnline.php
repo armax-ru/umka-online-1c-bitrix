@@ -1,5 +1,5 @@
 <?
-$MESS["SALE_UMKAONLINE_TITLE"] = "Óìêà Îíëàéí ÔÔÄ 1.05";
-$MESS["SALE_CASHBOX_UMKAONLINE_SETTINGS_AUTH_LOGIN_LABEL"] = "Ëîãèí êàññèðà";
-$MESS["SALE_CASHBOX_UMKAONLINE_SETTINGS_AUTH_PASS_LABEL"] = "Ïàðîëü êàññèðà";
-$MESS["SALE_CASHBOX_UMKAONLINE_CHECK_STATUS_WRONG_UUID"] = "Íå áûë îïðåäåëåí èäåíòèôèêàòîð ÷åêà. Âåðîÿòíåå âñåãî, ÷åê íå áûë íàïå÷àòàí";
+$MESS["SALE_UMKAONLINE_TITLE"] = "Ð£Ð¼ÐºÐ° ÐžÐ½Ð»Ð°Ð¹Ð½ Ð¤Ð¤Ð” 1.05";
+$MESS["SALE_CASHBOX_UMKAONLINE_SETTINGS_AUTH_LOGIN_LABEL"] = "Ð›Ð¾Ð³Ð¸Ð½ ÐºÐ°ÑÑÐ¸Ñ€Ð°";
+$MESS["SALE_CASHBOX_UMKAONLINE_SETTINGS_AUTH_PASS_LABEL"] = "ÐŸÐ°Ñ€Ð¾Ð»ÑŒ ÐºÐ°ÑÑÐ¸Ñ€Ð°";
+$MESS["SALE_CASHBOX_UMKAONLINE_CHECK_STATUS_WRONG_UUID"] = "ÐÐµ Ð±Ñ‹Ð» Ð¾Ð¿Ñ€ÐµÐ´ÐµÐ»ÐµÐ½ Ð¸Ð´ÐµÐ½Ñ‚Ð¸Ñ„Ð¸ÐºÐ°Ñ‚Ð¾Ñ€ Ñ‡ÐµÐºÐ°. Ð’ÐµÑ€Ð¾ÑÑ‚Ð½ÐµÐµ Ð²ÑÐµÐ³Ð¾, Ñ‡ÐµÐº Ð½Ðµ Ð±Ñ‹Ð» Ð½Ð°Ð¿ÐµÑ‡Ð°Ñ‚Ð°Ð½";

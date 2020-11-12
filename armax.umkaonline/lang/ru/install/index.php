@@ -1,6 +1,6 @@
 <?
-$MESS["armax.umkaonline_MODULE_NAME"] = "Umka365 Îíëàéí Êàññà";
-$MESS["armax.umkaonline_MODULE_DESC"] = "Umka365 Îíëàéí Êàññà";
+$MESS["armax.umkaonline_MODULE_NAME"] = "Umka365 ÐžÐ½Ð»Ð°Ð¹Ð½ ÐšÐ°ÑÑÐ°";
+$MESS["armax.umkaonline_MODULE_DESC"] = "Umka365 ÐžÐ½Ð»Ð°Ð¹Ð½ ÐšÐ°ÑÑÐ°";
 $MESS["armax.umkaonline_PARTNER_NAME"] = "ArMax";
 $MESS["armax.umkaonline_PARTNER_URI"] = "https://umka365.ru/";
 ?>
