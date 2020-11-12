@@ -36,9 +36,8 @@ use Bitrix\Sale\Cashbox\CreditPaymentCheck;
 use Bitrix\Sale\Cashbox\Errors\Warning;
 use Bitrix\Sale\Cashbox\Errors\Error;
 
-use \Bitrix\Main\Diag\Debug;
-
-
+use sgoettsch\monologRotatingFileHandler\Handler\monologRotatingFileHandler;
+use Monolog\Logger;
 
 class UmkaOnline extends Cashbox implements IPrintImmediately, ICheckable
 {
@@ -392,12 +391,12 @@ class UmkaOnline extends Cashbox implements IPrintImmediately, ICheckable
 
 
     /**
-	 * @return string
-	 */
-	public static function getName()
-	{
-		return Localization\Loc::getMessage('SALE_UMKAONLINE_TITLE');
-	}
+     * @return string
+     */
+    public static function getName()
+    {
+        return Localization\Loc::getMessage('SALE_UMKAONLINE_TITLE');
+    }
 
 
     /**
@@ -481,8 +480,6 @@ class UmkaOnline extends Cashbox implements IPrintImmediately, ICheckable
             $token = $this->requestAccessToken();
             if ($token === '')
             {
-                $this->sendToErrorLog('^^^ printImmediately: Пришел пустой токен доступа');
-                $this->sendToErrorLog('printImmediately: Данные чека', $check);
                 $printResult->addError(new Main\Error(Localization\Loc::getMessage('SALE_CASHBOX_ATOL_REQUEST_TOKEN_ERROR')));
                 return $printResult;
             }
@@ -554,12 +551,12 @@ class UmkaOnline extends Cashbox implements IPrintImmediately, ICheckable
      */
     public static function buildUuid($type, $id)
     {
-		$context = Application::getInstance()->getContext();
-		$server = $context->getServer();
-		$domain = $server->getServerName();
-		$domain = str_replace(".", "-", $domain);
-		
-		return $type.static::UUID_DELIMITER.$domain.static::UUID_DELIMITER.$id;
+        $context = Application::getInstance()->getContext();
+        $server = $context->getServer();
+        $domain = $server->getServerName();
+        $domain = str_replace(".", "-", $domain);
+        
+        return $type.static::UUID_DELIMITER.$domain.static::UUID_DELIMITER.$id;
     }
 
     /**
@@ -687,41 +684,52 @@ class UmkaOnline extends Cashbox implements IPrintImmediately, ICheckable
             }
             catch (ArgumentException $e)
             {
-                $this->sendToErrorLog('^^^ Не удалось разобрать ответ от umka365');
-                $this->sendToErrorLog('Объект http', $http);
-                $this->sendToErrorLog('Объект $response', $response);
-                $this->sendToErrorLog('Метод отправки запроса', $method);
-                $this->sendToErrorLog('Адресс запроса', $url);
-                $this->sendToErrorLog('Отправляемые данные (если есть)', $data );
+              $this->logHttp([
+                'msg' => 'Не удалось разобрать ответ от umka365',
+                'request' => [
+                  'url' => $url,
+                  'method' => $method,
+                  'data' => $data,
+                ],
+                'http' => $http,
+                '$response' => $response,
+              ]);
 
-                $result->addError(new Main\Error($e->getMessage()));
+              $result->addError(new Main\Error($e->getMessage()));
             }
         }
         else
         {
-            $this->sendToErrorLog('^^^ Отсутсвет ответ от umka365');
-            $this->sendToErrorLog('Объект http', $http);
-            $this->sendToErrorLog('Объект $response', $response);
-            $this->sendToErrorLog('Метод отправки запроса', $method);
-            $this->sendToErrorLog('Адресс запроса', $url);
-            $this->sendToErrorLog('Отправляемые данные (если есть)', $data );
+          $this->logHttp([
+            'msg' => 'Отсутствует ответ от umka365',
+            'request' => [
+              'url' => $url,
+              'method' => $method,
+              'data' => $data,
+            ],
+            'http' => $http
+          ]);
 
-            $error = $http->getError();
-            foreach ($error as $code =>$message)
-            {
-                $result->addError(new Main\Error($message, $code));
-            }
+          $error = $http->getError();
+          foreach ($error as $code =>$message)
+          {
+              $result->addError(new Main\Error($message, $code));
+          }
         }
 
         $resultData = $result->getData();
 
         if ($resultData["status"] === "fail" || $resultData["error"]) {
-            $this->sendToErrorLog('^^^ status fail или есть ошибка error');
-            $this->sendToErrorLog('Объект http', $http);
-            $this->sendToErrorLog('Объект $response', $response);
-            $this->sendToErrorLog('Метод отправки запроса', $method);
-            $this->sendToErrorLog('Адресс запроса', $url);
-            $this->sendToErrorLog('Отправляемые данные (если есть)', $data );
+          $this->logHttp([
+            'msg' => 'Ответ от сервера: status fail или есть ошибка в error',
+            'request' => [
+              'url' => $url,
+              'method' => $method,
+              'data' => $data,
+            ],
+            'http' => $http,
+            '$response' => $response,
+          ]);
         }
 
         return $result;
@@ -809,10 +817,16 @@ class UmkaOnline extends Cashbox implements IPrintImmediately, ICheckable
             return $response['token'];
         }
 
-        $this->sendToErrorLog('^^^ Не был получент токен в requestAccessToken');
-        $this->sendToErrorLog('Объект $result', $result);
-        $this->sendToErrorLog('Адресс запроса', $url);
-        $this->sendToErrorLog('Отправляемые данные (если есть)', $data );
+        $this->logHttp([
+          'msg' => 'Не был получент токен в requestAccessToken',
+          'request' => [
+            'url' => $url,
+            'method' => $method,
+            'data' => $data,
+          ],
+          'http' => $http,
+          '$response' => $response,
+        ]);
 
         return '';
     }
@@ -834,14 +848,62 @@ class UmkaOnline extends Cashbox implements IPrintImmediately, ICheckable
         return true;
     }
 
+    /**
+     * @return void
+     */
+    public function sendToErrorLog($msg, $data = []) {
+        $computed_msg = '>>> ' . $msg . " ";
+        $error_logs_path = $_SERVER['DOCUMENT_ROOT']. self::ERROR_LOGS_DIR . "/errors-cashbox-id-". $this->getField('ID') . ".log";
 
-    public function sendToErrorLog($msg, $data = '') {
-        $host = "Host: " . $_SERVER["HTTP_HOST"];
-        $date = "Date: " . date('r');
+        // 16 mb per file, max 10 files
+        $handler = new monologRotatingFileHandler($error_logs_path, 10, 16*1024*1024); 
+        $log = new Logger('umka_logs');
+        $log->pushHandler($handler);
 
-        $computed_msg = $host . "\n" . $date . "\n" . $msg . "\n";
-        $error_logs_path = self::ERROR_LOGS_DIR . "/errors-cashbox-id-". $this->getField('ID') . ".log";
+        $log->addInfo($computed_msg, $data);
+    }
 
-        Debug::dumpToFile($data, $computed_msg, $error_logs_path);
+    /**
+     * @return void
+     */
+    public function logHttp($data = []) {
+      $msg = array_key_exists('msg', $data) ? $data['msg'] : '';
+
+      $final_data = [
+        'request' => [
+          'url' => null,
+          'method' => null,
+          'data' => null,
+        ],
+        'response' => [
+          'headers' => null,
+          'status' => null,
+          'body' => null,
+          '$response' => null,
+        ],
+        'extra' => [],
+      ];
+
+      if (array_key_exists('request', $data)) {
+        $final_data['request'] = array_merge($final_data['request'], $data['request']);
+      }
+
+      if (array_key_exists('http', $data) && $data['http'] instanceof Main\Web\HttpClient) {
+        $http = $data['http'];
+
+        $final_data['response']['headers'] = $http->getHeaders()->toString();
+        $final_data['response']['status'] = $http->getStatus();
+        $final_data['response']['body'] = $http->getResult();
+      }
+
+      if (array_key_exists('$responce', $data)) {
+        $final_data['response']['$responce'] = $data['$responce'];
+      }
+
+      if (array_key_exists('extra', $data)) {
+        $final_data['extra'] = $data['extra'];
+      }
+
+      $this->sendToErrorLog($msg, $final_data);
     }
 }
