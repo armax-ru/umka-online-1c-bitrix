@@ -1,5 +1,0 @@
-{
-    "require": {
-        "sgoettsch/monolog-rotating-file-handler": "^1.0"
-    }
-}
