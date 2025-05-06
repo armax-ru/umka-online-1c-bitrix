@@ -1,4 +1,4 @@
-<?
+<?php
 IncludeModuleLangFile(__FILE__);
 
 use Bitrix\Main\Application;
@@ -10,7 +10,7 @@ use Bitrix\Sale\Cashbox\Manager;
 Class armax_umkaonline extends CModule
 {
   const MODULE_ID = 'armax.umkaonline';
-  const CASHBOX_HANDLER_DB = 'Armax\\\UmkaOnline';
+  const CASHBOX_HANDLER_DB = 'Armax\\\UmkaOnlineV4';
   var $MODULE_ID = 'armax.umkaonline';
   var $MODULE_VERSION;
   var $MODULE_VERSION_DATE;
@@ -34,23 +34,16 @@ Class armax_umkaonline extends CModule
 
   public function InstallEvents()
   {
-        EventManager::getInstance()->registerEventHandler("sale", "OnGetCustomCashboxHandlers", self::MODULE_ID, "CUmkaOnline", "registerMainClass");
+    EventManager::getInstance()->registerEventHandler("sale", "OnGetCustomCashboxHandlers", self::MODULE_ID, "CUmkaOnline", "registerMainClass");
+    EventManager::getInstance()->registerEventHandler("main", "OnProlog", self::MODULE_ID, "CUmkaOnline", "loadModuleForAjaxAddCashbox");
+
     return true;
   }
 
   public function UnInstallEvents()
   {
-        EventManager::getInstance()->unRegisterEventHandler("sale", "OnGetCustomCashboxHandlers", self::MODULE_ID, "CUmkaOnline", "registerMainClass");
-    return true;
-  }
-
-  private function getLogDirPath() {
-    return Application::getDocumentRoot() . '/umkaonline';
-  }
-
-  public function InstallFiles()
-  {
-    CopyDirFiles(__DIR__."/files/logs",$this->getLogDirPath());
+    EventManager::getInstance()->unRegisterEventHandler("sale", "OnGetCustomCashboxHandlers", self::MODULE_ID, "CUmkaOnline", "registerMainClass");
+    EventManager::getInstance()->unRegisterEventHandler("main", "OnProlog", self::MODULE_ID, "CUmkaOnline", "loadModuleForAjaxAddCashbox");
 
     return true;
   }
@@ -66,7 +59,7 @@ Class armax_umkaonline extends CModule
       $cashbox_db_off = array('ACTIVE' => 'N');
 
       // Запрос на получение списка касс с обработчиком этого модуля
-          
+
       $dbRes = CashboxTable::getList(
           array(
               'select' => array('ID'),
@@ -90,7 +83,6 @@ Class armax_umkaonline extends CModule
 
   public function DoInstall()
   {
-    $this->InstallFiles();
     $this->InstallEvents();
     RegisterModule(self::MODULE_ID);
   }
